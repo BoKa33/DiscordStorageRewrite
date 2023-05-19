@@ -5,14 +5,14 @@ def split_file(file, chunk_size=7 * 1024 * 1024, outputdir="temp", step=""):
     print(f"{step} Splitting...")
     # Get the file size in bytes
     file_size = os.path.getsize(file)
-    
+
     # Open the original file for reading
     with open(file, 'rb') as f:
         # Calculate the number of chunks
         num_chunks = file_size // chunk_size
         if file_size % chunk_size != 0:
             num_chunks += 1
-        
+
         # Split the file into chunks
         for i in range(num_chunks):
             print("\t",i+1," from ",num_chunks,end="\r")
@@ -27,7 +27,7 @@ def merge_file(file, inputdir="temp", step=""):
     print(f"{step} Merging...")
     # Get the original file name
     original_file = file
-    
+
     # Open the original file for writing
     with open(original_file, 'wb') as f:
         i = 0
@@ -46,13 +46,13 @@ def merge_file(file, inputdir="temp", step=""):
 def upload_temp_to_urllist(step=""):
     print(f"{step} Uploading...")
     links = []
-    
+
     intents = discord.Intents.default()
     client = discord.Client(intents=intents)
 
     @client.event
     async def on_ready():
-        channel = client.get_channel(<ADD CHANNEL HERE!!!!>)
+        channel = client.get_channel(<ADD CHANNEL HERE>)
         totalcount = len(os.listdir("temp"))
         for file in os.listdir("temp"):
             with open(f"temp/{file}", "rb") as f:
@@ -60,8 +60,9 @@ def upload_temp_to_urllist(step=""):
                 links.append(message.attachments[0].url)
                 print("\t",len(links), " from ", totalcount, end="\r")
         await client.close()
-    
-    client.run(<"ADD TOKEN HERE !!!!!">,log_handler=None)
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(client.start(<ADD TOKEN HERE>))
     print()
     return links
 
@@ -114,15 +115,15 @@ def file_to_linkslistsfile_presplit(big_file):                                  
     split_file(big_file, chunk_size = 350 * 1024 * 1024, outputdir="presplit", step="1.A")        #1.A
     urllists = []
     print("1.B:")                                                                                   #1.B:
-    for big_file_chunk in os.listdir("presplit"):                                                   
-        os.rename("presplit/"+big_file_chunk,big_file_chunk)                                            
-        clear_temp()                                                                                    
+    for big_file_chunk in os.listdir("presplit"):
+        os.rename("presplit/"+big_file_chunk,big_file_chunk)
+        clear_temp()
         split_file(big_file_chunk,step="\t1.B.A")                                                         #1.B.A
-        os.remove(big_file_chunk)                                                                       
+        os.remove(big_file_chunk)
         links = upload_temp_to_urllist(step="\t1.B.B")                                                    #1.B.B
-        clear_temp()                                                                                    
+        clear_temp()
         urllists.append(links);print("\t1.B.C")                                                           #1.B.C
-    list_to_file(urllists,big_file,".linkslists",step="1.C")                                        #1.C         
+    list_to_file(urllists,big_file,".linkslists",step="1.C")                                        #1.C
 
 
 #2:
@@ -137,17 +138,23 @@ def linkslistsfile_to_file_presplit(linkslistsfile):                            
         debug_counter += 1'''
     big_chunk_counter = 0
     print("2.B:")                                                                                   #2.B:
-    for linkslist in linkslists:                                                                    
+    for linkslist in linkslists:
         #print("downloading Linklist: ",big_chunk_counter)
         links = linkslist.strip().split(' ');print("\t2.B.C")                                             #2.B.C
         download_urllist_to_temp(links,step="\t2.B.B")                                                    #2.B.B
-        big_chunk_file = linkslistsfile+"."+str(links[0].split(".")[-2]) # ->str(get big_chunk_id)                                   
-        #print(big_chunk_file)                                                                       
+        big_chunk_file = linkslistsfile+"."+str(links[0].split(".")[-2]) # ->str(get big_chunk_id)
+        #print(big_chunk_file)
         merge_file(big_chunk_file,step="\t2.B.A")                                                         #2.B.A
         os.rename(big_chunk_file, "presplit/"+big_chunk_file)
-        big_chunk_counter += 1 
+        big_chunk_counter += 1
     merge_file(linkslistsfile, inputdir="presplit",step="2.A")                                      #2.A
     clear_temp();clear_temp(temp_dir="presplit")
+
+def uploadFile(file): #1
+    file_to_linkslistsfile_presplit(file)
+
+def downloadFile(linkfile): #2
+    linkslistsfile_to_file_presplit(linkfile)
 
 
 """
@@ -164,6 +171,4 @@ def linksfile_to_file(linkfile, presplit=1):         #B          (Download)
     download_urllist_to_temp(links)             #2.B
     merge_file(linkfile)                        #2.A
     clear_temp()                                #0.X
-"""    
-
-
+"""
