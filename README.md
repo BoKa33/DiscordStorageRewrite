@@ -1,3 +1,5 @@
+! This Readme does not fit to the rest of the project anymore!
+
 _______________________________________________
 
 ### **Discord Storage** _Rewrite_ (Beta)
